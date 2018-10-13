@@ -12,23 +12,23 @@ import (
 // ===== Controller
 type crud1ctrl struct{}
 
-func (_ *crud1ctrl) Create(c echo.Context) error {
+func (ctrl *crud1ctrl) Create(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (_ *crud1ctrl) List(c echo.Context) error {
+func (ctrl *crud1ctrl) List(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (_ *crud1ctrl) Show(c echo.Context) error {
+func (ctrl *crud1ctrl) Show(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (_ *crud1ctrl) Update(c echo.Context) error {
+func (ctrl *crud1ctrl) Update(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (_ *crud1ctrl) Delete(c echo.Context) error {
+func (ctrl *crud1ctrl) Delete(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
