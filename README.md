@@ -1,6 +1,9 @@
 # Middlewarex
 
+[![CircleCI](https://circleci.com/gh/mdouchement/middlewarex/tree/master.svg?style=shield)](https://circleci.com/gh/mdouchement/middlewarex/tree/master)
+[![cover.run](https://cover.run/go/github.com/mdouchement/middlewarex.svg?style=flat&tag=golang-1.10)](https://cover.run/go?tag=golang-1.10&repo=github.com%2Fmdouchement%2Fmiddlewarex)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mdouchement/middlewarex)](https://goreportcard.com/report/github.com/mdouchement/middlewarex)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/mdouchement/middlewarex)
 [![License](https://img.shields.io/github/license/mdouchement/middlewarex.svg)](http://opensource.org/licenses/MIT)
 
 Bunch of middlewares for [Labstack Echo](https://github.com/labstack/echo).
