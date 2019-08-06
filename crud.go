@@ -1,6 +1,6 @@
 package middlewarex
 
-import "github.com/labstack/echo"
+import "github.com/labstack/echo/v4"
 
 // All of the methods are the same type as HandlerFunc
 // if you don't want to support any methods of CRUD, then don't implement it
