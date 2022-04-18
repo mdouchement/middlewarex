@@ -10,7 +10,7 @@ Bunch of middlewares for [Labstack Echo](https://github.com/labstack/echo).
 
 ## Requirements
 
-- Echo 3.x.x
+- Echo 4.x.x
 
 ## Usage
 ### CRUD
