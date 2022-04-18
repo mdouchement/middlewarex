@@ -173,10 +173,11 @@ func PASETOWithConfig(config PASETOConfig) echo.MiddlewareFunc {
 			var token Token
 			err = paseto.Decrypt(auth, config.SigningKey, &token.JSONToken, &token.Footer)
 			if err == nil {
+				// Store user information from token into context.
+				c.Set(config.ContextKey, token)
+
 				err = token.Validate(append(config.Validators, paseto.ValidAt(time.Now()))...)
 				if err == nil {
-					// Store user information from token into context.
-					c.Set(config.ContextKey, token)
 					if config.SuccessHandler != nil {
 						config.SuccessHandler(c)
 					}
