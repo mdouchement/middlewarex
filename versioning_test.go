@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/mdouchement/middlewarex"
 )
 
@@ -14,11 +14,11 @@ func versioningEngine() *echo.Echo {
 	e := echo.New()
 
 	v1 := e.Group("/v1")
-	v1.GET("/toto", func(c echo.Context) error {
+	v1.GET("/toto", func(c *echo.Context) error {
 		return c.HTML(http.StatusOK, "[v1] toto")
 	})
 	v2 := e.Group("/v2")
-	v2.GET("/toto", func(c echo.Context) error {
+	v2.GET("/toto", func(c *echo.Context) error {
 		return c.HTML(http.StatusOK, "[v2] toto")
 	})
 
@@ -27,11 +27,10 @@ func versioningEngine() *echo.Echo {
 
 func TestVersioning(t *testing.T) {
 	e := versioningEngine()
-	e.Debug = true
 	e.Pre(middlewarex.Versioning("vnd.myapp.v2", "vnd.myapp.v1", "vnd.myapp.v2"))
 
 	// With the header
-	req := httptest.NewRequest(echo.GET, "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder() // aka ResponseWriter
 	req.URL.Path = "/toto"
 	req.Header.Set(middlewarex.XApplicationVersion, "vnd.myapp.v1")
@@ -39,14 +38,14 @@ func TestVersioning(t *testing.T) {
 	if rec.Body.String() != "[v1] toto" {
 		t.Fatalf("Expected '[v1] toto' but got '%s'", rec.Body.String())
 	}
-	if rec.HeaderMap.Get(middlewarex.XApplicationVersion) != "vnd.myapp.v1" {
+	if rec.Header().Get(middlewarex.XApplicationVersion) != "vnd.myapp.v1" {
 		t.Fatalf("Expected 'vnd.myapp.v1' but got '%s'", rec.Body.String())
 	}
-	if rec.HeaderMap.Get(middlewarex.XApplicationStableVersion) != "vnd.myapp.v2" {
+	if rec.Header().Get(middlewarex.XApplicationStableVersion) != "vnd.myapp.v2" {
 		t.Fatalf("Expected 'vnd.myapp.v2' but got '%s'", rec.Body.String())
 	}
 
-	req = httptest.NewRequest(echo.GET, "/toto", nil)
+	req = httptest.NewRequest(http.MethodGet, "/toto", nil)
 	rec = httptest.NewRecorder()
 	req.URL.Path = "/toto"
 	req.Header.Set(middlewarex.XApplicationVersion, "vnd.myapp.v2")
@@ -56,7 +55,7 @@ func TestVersioning(t *testing.T) {
 	}
 
 	// With versioned path
-	req = httptest.NewRequest(echo.GET, "/toto", nil)
+	req = httptest.NewRequest(http.MethodGet, "/toto", nil)
 	rec = httptest.NewRecorder()
 	req.URL.Path = "/v1/toto"
 	e.ServeHTTP(rec, req)
@@ -64,7 +63,7 @@ func TestVersioning(t *testing.T) {
 		t.Fatalf("Expected '[v1] toto' but got '%s'", rec.Body.String())
 	}
 
-	req = httptest.NewRequest(echo.GET, "/toto", nil)
+	req = httptest.NewRequest(http.MethodGet, "/toto", nil)
 	rec = httptest.NewRecorder()
 	req.URL.Path = "/v2/toto"
 	e.ServeHTTP(rec, req)
@@ -73,16 +72,19 @@ func TestVersioning(t *testing.T) {
 	}
 
 	// Failing mix
-	req = httptest.NewRequest(echo.GET, "/toto", nil)
+	req = httptest.NewRequest(http.MethodGet, "/toto", nil)
 	rec = httptest.NewRecorder()
 	req.URL.Path = "/toto"
 	req.Header.Set(middlewarex.XApplicationVersion, "vnd.myapp.v42")
 	e.ServeHTTP(rec, req)
+	if rec.Result().StatusCode != http.StatusNotFound {
+		t.Fatalf("Expected message 404 but got '%d'", rec.Result().StatusCode)
+	}
 	if !strings.Contains(rec.Body.String(), "Unsuported X-Application-Version: vnd.myapp.v42") {
 		t.Fatalf("Expected message 'Unsuported X-Application-Version: vnd.myapp.v42' but got '%s'", rec.Body.String())
 	}
 
-	req = httptest.NewRequest(echo.GET, "/toto", nil)
+	req = httptest.NewRequest(http.MethodGet, "/toto", nil)
 	rec = httptest.NewRecorder()
 	req.URL.Path = "/v1/toto"
 	req.Header.Set(middlewarex.XApplicationVersion, "vnd.myapp.v2")
@@ -101,10 +103,10 @@ func BenchmarkVersioningRW(b *testing.B) {
 	e := versioningEngine()
 	e.Pre(middlewarex.Versioning("vnd.myapp.v2", "vnd.myapp.v1", "vnd.myapp.v2"))
 
-	req := httptest.NewRequest(echo.GET, "/toto", nil)
+	req := httptest.NewRequest(http.MethodGet, "/toto", nil)
 	rec := httptest.NewRecorder() // aka ResponseWriter
 	req.Header.Set(middlewarex.XApplicationVersion, "vnd.myapp.v1")
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		e.ServeHTTP(rec, req)
 	}
 }
@@ -114,9 +116,9 @@ func BenchmarkVersioningVRwM(b *testing.B) {
 	e := versioningEngine()
 	e.Pre(middlewarex.Versioning("vnd.myapp.v2", "vnd.myapp.v1", "vnd.myapp.v2"))
 
-	req := httptest.NewRequest(echo.GET, "/v1/toto", nil)
+	req := httptest.NewRequest(http.MethodGet, "/v1/toto", nil)
 	rec := httptest.NewRecorder() // aka ResponseWriter
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		e.ServeHTTP(rec, req)
 	}
 }
@@ -125,9 +127,9 @@ func BenchmarkVersioningVRwM(b *testing.B) {
 func BenchmarkVersioningVR(b *testing.B) {
 	e := versioningEngine()
 
-	req := httptest.NewRequest(echo.GET, "/v1/toto", nil)
+	req := httptest.NewRequest(http.MethodGet, "/v1/toto", nil)
 	rec := httptest.NewRecorder() // aka ResponseWriter
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		e.ServeHTTP(rec, req)
 	}
 }

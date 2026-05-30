@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/o1egl/paseto/v2"
 )
 
@@ -63,15 +63,15 @@ type (
 	}
 
 	// PASETOSuccessHandler defines a function which is executed for a valid token.
-	PASETOSuccessHandler func(echo.Context)
+	PASETOSuccessHandler func(*echo.Context)
 
 	// PASETOErrorHandler defines a function which is executed for an invalid token.
 	PASETOErrorHandler func(error) error
 
 	// PASETOErrorHandlerWithContext is almost identical to PASETOErrorHandler, but it's passed the current context.
-	PASETOErrorHandlerWithContext func(error, echo.Context) error
+	PASETOErrorHandlerWithContext func(error, *echo.Context) error
 
-	pasetoExtractor func(echo.Context) (string, error)
+	pasetoExtractor func(*echo.Context) (string, error)
 )
 
 // Errors
@@ -80,16 +80,14 @@ var (
 	ErrPASETOUnsupported = echo.NewHTTPError(http.StatusBadRequest, "unsupported paseto version/purpose")
 )
 
-var (
-	// DefaultPASETOConfig is the default PASETO auth middleware config.
-	DefaultPASETOConfig = PASETOConfig{
-		Skipper:     middleware.DefaultSkipper,
-		ContextKey:  "paseto",
-		TokenLookup: "header:" + echo.HeaderAuthorization,
-		AuthScheme:  "Bearer",
-		Validators:  []paseto.Validator{},
-	}
-)
+// DefaultPASETOConfig is the default PASETO auth middleware config.
+var DefaultPASETOConfig = PASETOConfig{
+	Skipper:     middleware.DefaultSkipper,
+	ContextKey:  "paseto",
+	TokenLookup: "header:" + echo.HeaderAuthorization,
+	AuthScheme:  "Bearer",
+	Validators:  []paseto.Validator{},
+}
 
 // PASETO returns a JSON Platform-Agnostic SEcurity TOkens (PASETO) auth middleware.
 //
@@ -137,7 +135,7 @@ func PASETOWithConfig(config PASETOConfig) echo.MiddlewareFunc {
 	}
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
+		return func(c *echo.Context) error {
 			if config.Skipper(c) {
 				return next(c)
 			}
@@ -191,18 +189,17 @@ func PASETOWithConfig(config PASETOConfig) echo.MiddlewareFunc {
 			if config.ErrorHandlerWithContext != nil {
 				return config.ErrorHandlerWithContext(err, c)
 			}
-			return &echo.HTTPError{
-				Code:     http.StatusUnauthorized,
-				Message:  "invalid or expired paseto",
-				Internal: err,
-			}
+			return echo.HTTPError{
+				Code:    http.StatusUnauthorized,
+				Message: "invalid or expired paseto",
+			}.Wrap(err)
 		}
 	}
 }
 
 // pasetoFromHeader returns a `pasetoExtractor` that extracts token from the request header.
 func pasetoFromHeader(header string, authScheme string) pasetoExtractor {
-	return func(c echo.Context) (string, error) {
+	return func(c *echo.Context) (string, error) {
 		auth := c.Request().Header.Get(header)
 		l := len(authScheme)
 		if len(auth) > l+1 && auth[:l] == authScheme {
@@ -214,7 +211,7 @@ func pasetoFromHeader(header string, authScheme string) pasetoExtractor {
 
 // pasetoFromQuery returns a `pasetoExtractor` that extracts token from the query string.
 func pasetoFromQuery(param string) pasetoExtractor {
-	return func(c echo.Context) (string, error) {
+	return func(c *echo.Context) (string, error) {
 		token := c.QueryParam(param)
 		if token == "" {
 			return "", ErrPASETOMissing
@@ -225,7 +222,7 @@ func pasetoFromQuery(param string) pasetoExtractor {
 
 // pasetoFromParam returns a `pasetoExtractor` that extracts token from the url param string.
 func pasetoFromParam(param string) pasetoExtractor {
-	return func(c echo.Context) (string, error) {
+	return func(c *echo.Context) (string, error) {
 		token := c.Param(param)
 		if token == "" {
 			return "", ErrPASETOMissing
@@ -236,7 +233,7 @@ func pasetoFromParam(param string) pasetoExtractor {
 
 // pasetoFromCookie returns a `pasetoExtractor` that extracts token from the named cookie.
 func pasetoFromCookie(name string) pasetoExtractor {
-	return func(c echo.Context) (string, error) {
+	return func(c *echo.Context) (string, error) {
 		cookie, err := c.Cookie(name)
 		if err != nil {
 			return "", ErrPASETOMissing

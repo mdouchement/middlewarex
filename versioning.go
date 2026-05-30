@@ -2,9 +2,10 @@ package middlewarex
 
 import (
 	"fmt"
+	"net/http"
 	"path"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 const (
@@ -26,7 +27,7 @@ func Versioning(stable string, supported ...string) echo.MiddlewareFunc {
 	}
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) (err error) {
+		return func(c *echo.Context) error {
 			req := c.Request()
 			vnd := req.Header.Get(XApplicationVersion)
 
@@ -38,7 +39,7 @@ func Versioning(stable string, supported ...string) echo.MiddlewareFunc {
 			c.Response().Header().Set(XApplicationStableVersion, stable)
 
 			if !msupported[vnd] {
-				return fmt.Errorf("Unsuported %s: %s", XApplicationVersion, vnd)
+				return c.String(http.StatusNotFound, fmt.Sprintf("Unsuported %s: %s", XApplicationVersion, vnd))
 			}
 
 			req.URL.Path = prefixes[vnd] + req.URL.Path
