@@ -6,29 +6,29 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/mdouchement/middlewarex"
 )
 
 type crud1ctrl struct{}
 
-func (_ *crud1ctrl) Create(c echo.Context) error {
+func (*crud1ctrl) Create(c *echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (_ *crud1ctrl) List(c echo.Context) error {
+func (*crud1ctrl) List(c *echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (_ *crud1ctrl) Show(c echo.Context) error {
+func (*crud1ctrl) Show(c *echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (_ *crud1ctrl) Update(c echo.Context) error {
+func (*crud1ctrl) Update(c *echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (_ *crud1ctrl) Delete(c echo.Context) error {
+func (*crud1ctrl) Delete(c *echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
@@ -38,7 +38,7 @@ func TestCRUD(t *testing.T) {
 	middlewarex.CRUD(router, "/tests", &crud1ctrl{})
 
 	seen := map[string]bool{}
-	for _, route := range e.Routes() {
+	for _, route := range e.Router().Routes() {
 		if !strings.HasPrefix(route.Path, "/tests") {
 			continue
 		}
@@ -73,15 +73,15 @@ func TestCRUD(t *testing.T) {
 
 type crud2ctrl struct{}
 
-func (_ *crud2ctrl) List(c echo.Context) error {
+func (*crud2ctrl) List(c *echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (_ *crud2ctrl) Show(c echo.Context) error {
+func (*crud2ctrl) Show(c *echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (_ *crud2ctrl) Delete(c echo.Context) error {
+func (*crud2ctrl) Delete(c *echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
@@ -91,7 +91,7 @@ func TestCRUDWithoutAllMethods(t *testing.T) {
 	middlewarex.CRUD(router, "/tests", &crud2ctrl{})
 
 	seen := map[string]bool{}
-	for _, route := range e.Routes() {
+	for _, route := range e.Router().Routes() {
 		if !strings.HasPrefix(route.Path, "/tests") {
 			continue
 		}

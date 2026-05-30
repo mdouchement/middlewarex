@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/mdouchement/middlewarex"
 	"github.com/o1egl/paseto/v2"
 	"github.com/stretchr/testify/assert"
@@ -14,14 +14,14 @@ import (
 
 func TestPASETORace(t *testing.T) {
 	e := echo.New()
-	handler := func(c echo.Context) error {
+	handler := func(c *echo.Context) error {
 		return c.String(http.StatusOK, "test")
 	}
 
 	key := []byte("400c48a557be10254d235cf8c506e6fe")
 	h := middlewarex.PASETO(key)(handler)
 
-	makeReq := func(token string) echo.Context {
+	makeReq := func(token string) *echo.Context {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		res := httptest.NewRecorder()
 		req.Header.Set(echo.HeaderAuthorization, middlewarex.DefaultPASETOConfig.AuthScheme+" "+token)
@@ -45,7 +45,7 @@ func TestPASETORace(t *testing.T) {
 
 func TestPASETO(t *testing.T) {
 	e := echo.New()
-	handler := func(c echo.Context) error {
+	handler := func(c *echo.Context) error {
 		return c.String(http.StatusOK, "test")
 	}
 
@@ -291,8 +291,7 @@ func TestPASETO(t *testing.T) {
 		c := e.NewContext(req, res)
 
 		if test.reqURL == "/"+token {
-			c.SetParamNames("paseto")
-			c.SetParamValues(token)
+			c.SetPathValues([]echo.PathValue{{Name: "paseto", Value: token}})
 		}
 
 		if test.expPanic {

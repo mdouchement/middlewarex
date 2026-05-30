@@ -1,33 +1,33 @@
 package middlewarex
 
-import "github.com/labstack/echo/v4"
+import "github.com/labstack/echo/v5"
 
 // All of the methods are the same type as HandlerFunc
 // if you don't want to support any methods of CRUD, then don't implement it
 
 // CreateSupported interface
 type CreateSupported interface {
-	Create(echo.Context) error
+	Create(*echo.Context) error
 }
 
 // ListSupported interface
 type ListSupported interface {
-	List(echo.Context) error
+	List(*echo.Context) error
 }
 
 // ShowSupported interface
 type ShowSupported interface {
-	Show(echo.Context) error
+	Show(*echo.Context) error
 }
 
 // UpdateSupported interface
 type UpdateSupported interface {
-	Update(echo.Context) error
+	Update(*echo.Context) error
 }
 
 // DeleteSupported interface
 type DeleteSupported interface {
-	Delete(echo.Context) error
+	Delete(*echo.Context) error
 }
 
 // CRUD defines the folowwing resources:
